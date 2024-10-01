@@ -3,40 +3,39 @@ import requests
 import os
 
 
-class HHParser():
-    '''
+class HHParser:
+    """
     Создаем класс для подключения к HH и получения данных по компаниям и вакансиям
-    '''
+    """
+
     def __init__(self, list_id):
         self.list_id = list_id
 
-
     def job_employers(self, id):
-        url = f'https://api.hh.ru/employers/{id}/'
-        params = {'per_page': 10, "sort_by": "by_vacancies_open", 'area': 4}
+        url = f"https://api.hh.ru/employers/{id}/"
+        params = {"per_page": 10, "sort_by": "by_vacancies_open", "area": 4}
         response = requests.get(url, params=params)
         employer = response.json()
         return {
-            'id': employer['id'],
-            'name': employer['name'],
-            'url': employer['alternate_url']
+            "id": employer["id"],
+            "name": employer["name"],
+            "url": employer["alternate_url"],
         }
 
-
     def job_vacancies(self, id):
-        '''
+        """
         Подключаемся
-        '''
-        url = 'https://api.hh.ru/vacancies/'
-        params = {'per_page': 10, "employer_id":id, 'area': 4}
+        """
+        url = "https://api.hh.ru/vacancies/"
+        params = {"per_page": 10, "employer_id": id, "area": 4}
         response = requests.get(url, params=params)
-        vacancies = response.json()['items']
+        vacancies = response.json()["items"]
         return vacancies
 
     def get_employers_list(self):
-        '''
+        """
         Получаем данные о компаниях
-        '''
+        """
         employers_list = []
 
         for id in self.list_id:
@@ -44,9 +43,9 @@ class HHParser():
         return employers_list
 
     def get_vacancies_list(self):
-        '''
+        """
         Получаем данные о вакансиях
-        '''
+        """
         emp = self.get_employers_list()
         vacancies_list = []
         for employer in emp:
@@ -54,9 +53,9 @@ class HHParser():
         return vacancies_list
 
     def filter_salary(self):
-        '''
+        """
         Готовим данные по вакансиям для таблицы
-        '''
+        """
         vacancies = self.get_vacancies_list()
         filter_vacancies = []
         for vac in vacancies:
@@ -74,26 +73,39 @@ class HHParser():
                     if vac["salary"]["from"] is None and vac["salary"]["to"] is None:
                         vac["salary"] = 0
                     else:
-                        if vac["salary"]["from"] is None and vac["salary"]["to"] is not None:
+                        if (
+                            vac["salary"]["from"] is None
+                            and vac["salary"]["to"] is not None
+                        ):
                             vac["salary"] = vac["salary"]["to"]
                         else:
-                            if vac["salary"]["from"] is not None and vac["salary"]["to"] is None:
+                            if (
+                                vac["salary"]["from"] is not None
+                                and vac["salary"]["to"] is None
+                            ):
                                 vac["salary"] = vac["salary"]["from"]
                             else:
-                                if vac["salary"]["from"] is not None and vac["salary"]["to"] is not None:
+                                if (
+                                    vac["salary"]["from"] is not None
+                                    and vac["salary"]["to"] is not None
+                                ):
                                     vac["salary"] = vac["salary"]["to"]
-            filter_vacancies.append({
-                                    "id": vac["id"],
-                                    "name": vac["name"],
-                                    "salary": vac["salary"],
-                                    "currency": vac["currency"],
-                                    "url": vac["alternate_url"],
-                                    "employer": vac["employer"]["id"],
-                                })
+            filter_vacancies.append(
+                {
+                    "id": vac["id"],
+                    "name": vac["name"],
+                    "salary": vac["salary"],
+                    "currency": vac["currency"],
+                    "url": vac["alternate_url"],
+                    "employer": vac["employer"]["id"],
+                }
+            )
         return filter_vacancies
-#hh = HHParser()
-#print(hh.job_employers())
-#print(hh.job_vacancies())
-#print(hh.get_employers_list())
-#print(hh.get_vacancies_list())
-#print(hh.filter_salary())
+
+
+# hh = HHParser()
+# print(hh.job_employers())
+# print(hh.job_vacancies())
+# print(hh.get_employers_list())
+# print(hh.get_vacancies_list())
+# print(hh.filter_salary())
